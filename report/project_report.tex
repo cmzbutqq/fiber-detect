@@ -108,16 +108,16 @@
 \begin{frame}
 \frametitle{系统架构设计}
 \begin{center}
-\begin{tikzpicture}[node distance=2cm, auto,
-    process/.style={rectangle, minimum width=2.5cm, minimum height=1cm, text centered, draw=black, fill=lightblue},
-    data/.style={ellipse, minimum width=2cm, minimum height=0.8cm, text centered, draw=black, fill=yellow!30},
+\begin{tikzpicture}[node distance=1.5cm, auto,
+    process/.style={rectangle, minimum width=2cm, minimum height=0.8cm, text centered, draw=black, fill=lightblue},
+    data/.style={ellipse, minimum width=1.8cm, minimum height=0.6cm, text centered, draw=black, fill=yellow!30},
     arrow/.style={thick,->,>=stealth}]
     
     % 节点定义
     \node [data] (input) {原始图像};
-    \node [process, below of=input] (preprocess) {数据预处理};
+    \node [process, below of=input] (preprocess) {预处理};
     \node [process, below of=preprocess] (augment) {数据增强};
-    \node [process, below of=augment] (model) {ResNet-50模型};
+    \node [process, below of=augment] (model) {ResNet-50};
     \node [data, below of=model] (output) {分类结果};
     
     % 连接线
@@ -125,13 +125,11 @@
     \draw [arrow] (preprocess) -- (augment);
     \draw [arrow] (augment) -- (model);
     \draw [arrow] (model) -- (output);
-    
-    % 侧边注释
-    \node [right of=preprocess, node distance=3cm] {尺寸调整、标准化};
-    \node [right of=augment, node distance=3cm] {翻转、旋转、颜色变换};
-    \node [right of=model, node distance=3cm] {迁移学习、微调};
 \end{tikzpicture}
 \end{center}
+
+\vspace{0.5cm}
+\textbf{处理流程：}尺寸调整 → 数据增强 → 特征提取 → 分类输出
 \end{frame}
 
 \begin{frame}
@@ -340,14 +338,14 @@
 \frametitle{数据集分析可视化}
 \begin{figure}
 \centering
-\includegraphics[width=0.8\textwidth]{dataset_analysis.png}
-\caption{数据集统计分析图表}
+\includegraphics[width=0.75\textwidth]{dataset_analysis.png}
+\caption{数据集统计分析}
 \end{figure}
 
 \begin{itemize}
-    \item 类别分布相对均衡，但存在一定不平衡
+    \item 类别分布存在不平衡现象
     \item 光镜与电镜图像数量基本相等
-    \item 图像尺寸较为统一，有利于模型训练
+    \item 图像尺寸统一，便于训练
 \end{itemize}
 \end{frame}
 
@@ -422,56 +420,51 @@
 \frametitle{项目总结}
 \begin{block}{已完成工作}
 \begin{itemize}
-    \item ✅ 完成数据集收集和预处理
-    \item ✅ 实现基于ResNet-50的分类模型
-    \item ✅ 完成模型训练和性能评估
-    \item ✅ 开发预测和分析工具
-    \item ✅ 生成完整的项目文档
+    \item ✅ 数据集收集和预处理
+    \item ✅ ResNet-50分类模型实现
+    \item ✅ 模型训练和性能评估
+    \item ✅ 预测和分析工具开发
 \end{itemize}
 \end{block}
 
 \begin{block}{阶段性成果}
 \begin{itemize}
-    \item 完成了技术方案的初步验证
-    \item 识别了数据不足等关键瓶颈
-    \item 建立了基础的分类流水线
-    \item 为后续改进提供了基准
+    \item 技术方案初步验证完成
+    \item 识别关键瓶颈：数据不足
+    \item 建立基础分类流水线
 \end{itemize}
 \end{block}
 
 \begin{alertblock}{当前挑战}
 \begin{itemize}
-    \item 准确率44.07\%距离实用化还有很大差距
-    \item 数据集规模严重不足
-    \item 类别不平衡问题突出
+    \item 准确率44.07\%，距实用化有差距
+    \item 数据集规模不足，类别不平衡
 \end{itemize}
 \end{alertblock}
 \end{frame}
 
 \begin{frame}
 \frametitle{下一步改进计划}
-\begin{block}{\textbf{紧急优先级 - 数据问题}}
+\begin{block}{紧急优先级 - 数据问题}
 \begin{itemize}
-    \item \textbf{扩大数据集}：目标收集至少1000张图像
-    \item \textbf{平衡类别分布}：确保每类至少100张样本
-    \item \textbf{提高数据质量}：标注一致性检查
+    \item 扩大数据集：目标1000张图像
+    \item 平衡类别分布：每类≥100张
+    \item 提高数据质量：标注一致性检查
 \end{itemize}
 \end{block}
 
-\begin{block}{\textbf{中期目标 - 技术优化}}
+\begin{block}{中期目标 - 技术优化}
 \begin{itemize}
-    \item 尝试更适合小样本的网络架构
+    \item 尝试小样本学习架构
     \item 改进数据增强策略
     \item 探索半监督学习方法
-    \item 引入领域自适应技术
 \end{itemize}
 \end{block}
 
-\begin{block}{\textbf{长期规划 - 系统完善}}
+\begin{block}{长期规划 - 系统完善}
 \begin{itemize}
-    \item 达到80\%以上的实用准确率
-    \item 开发用户友好的应用界面
-    \item 建立持续学习机制
+    \item 达到80\%以上准确率
+    \item 开发用户友好界面
 \end{itemize}
 \end{block}
 \end{frame}
