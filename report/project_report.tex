@@ -17,7 +17,7 @@
 
 % 标题信息
 \title{基于深度学习的植物纤维图像分类系统}
-\subtitle{ResNet-50迁移学习方法研究与实现}
+\subtitle{阶段性进展汇报 - ResNet-50迁移学习初步探索}
 \author{项目汇报}
 \institute{植物纤维识别项目组}
 \date{\today}
@@ -45,17 +45,17 @@
 \frametitle{项目背景与目标}
 \begin{itemize}
     \item \textbf{研究背景}：植物纤维识别在材料科学、生物学研究中具有重要意义
-    \item \textbf{项目目标}：开发基于深度学习的植物纤维自动分类系统
+    \item \textbf{项目目标}：探索基于深度学习的植物纤维自动分类可行性
     \item \textbf{技术路线}：采用ResNet-50预训练模型进行迁移学习
-    \item \textbf{应用价值}：提高纤维识别效率，减少人工成本
+    \item \textbf{当前阶段}：初步验证技术方案，识别关键挑战
 \end{itemize}
 
-\vspace{0.5cm}
-\begin{block}{核心创新点}
+\vspace{0.3cm}
+\begin{block}{探索重点}
 \begin{itemize}
     \item 多模态图像融合（光镜+电镜）
-    \item 数据不平衡处理策略
-    \item 端到端深度学习分类框架
+    \item 小样本数据集的处理策略
+    \item 类别不平衡问题的解决方案
 \end{itemize}
 \end{block}
 \end{frame}
@@ -174,56 +174,56 @@
 
 \begin{frame}
 \frametitle{ResNet-50理论基础}
-\textbf{残差学习原理：}
+\textbf{为什么选择ResNet-50？}
 \begin{itemize}
-    \item 解决深度网络梯度消失问题
-    \item 引入跳跃连接（Skip Connection）
-    \item 学习残差映射而非直接映射
+    \item 传统深度网络存在"梯度消失"问题：信息在反向传播时逐层衰减
+    \item ResNet通过"跳跃连接"让信息可以直接传递到后面的层
+    \item 就像给信息建了一条"高速公路"，避免拥堵
 \end{itemize}
 
-\vspace{0.3cm}
-\textbf{残差块数学表达：}
+\vspace{0.2cm}
+\textbf{残差块的核心思想：}
 \[
 \mathbf{y} = \mathcal{F}(\mathbf{x}, \{W_i\}) + \mathbf{x}
 \]
-其中 \(\mathcal{F}(\mathbf{x}, \{W_i\})\) 表示残差映射，\(\mathbf{x}\) 为输入。
+\small{输出 = 学到的变化 + 原始输入（这样即使学不到什么，至少能保持原样）}
 
-\vspace{0.3cm}
-\textbf{Bottleneck设计：}
+\vspace{0.2cm}
+\textbf{Bottleneck结构（降低计算量）：}
 \[
 \begin{aligned}
-\mathbf{z}_1 &= \text{ReLU}(\text{BN}(\text{Conv}_{1×1}(\mathbf{x}))) \\
-\mathbf{z}_2 &= \text{ReLU}(\text{BN}(\text{Conv}_{3×3}(\mathbf{z}_1))) \\
-\mathbf{z}_3 &= \text{BN}(\text{Conv}_{1×1}(\mathbf{z}_2)) \\
-\mathbf{y} &= \text{ReLU}(\mathbf{z}_3 + \mathbf{x})
+\text{1×1卷积} &\rightarrow \text{降维（减少通道数）} \\
+\text{3×3卷积} &\rightarrow \text{特征提取（核心计算）} \\
+\text{1×1卷积} &\rightarrow \text{升维（恢复通道数）}
 \end{aligned}
 \]
 \end{frame}
 
 \begin{frame}
-\frametitle{损失函数与优化}
+\frametitle{损失函数与优化策略}
+\textbf{如何衡量模型的"错误程度"？}
+\begin{itemize}
+    \item 使用交叉熵损失：预测越准确，损失越小
+    \item 当模型完全猜对时，损失为0；完全猜错时，损失很大
+\end{itemize}
+
 \textbf{交叉熵损失函数：}
 \[
 \mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N}\sum_{j=1}^{C} y_{ij} \log(\hat{y}_{ij})
 \]
-其中 \(N\) 为批次大小，\(C\) 为类别数，\(y_{ij}\) 为真实标签，\(\hat{y}_{ij}\) 为预测概率。
+\small{\(N\)=样本数量，\(C\)=类别数量，\(y_{ij}\)=真实标签，\(\hat{y}_{ij}\)=预测概率}
 
-\vspace{0.3cm}
-\textbf{Softmax激活函数：}
+\textbf{Softmax：将输出转换为概率}
 \[
 \hat{y}_{ij} = \frac{\exp(z_{ij})}{\sum_{k=1}^{C} \exp(z_{ik})}
 \]
+\small{确保所有类别的预测概率加起来等于1}
 
-\vspace{0.3cm}
-\textbf{Adam优化器更新规则：}
+\textbf{Adam优化器：智能调整学习步长}
 \[
-\begin{aligned}
-\mathbf{m}_t &= \beta_1 \mathbf{m}_{t-1} + (1-\beta_1) \nabla_{\theta} \mathcal{L}_t \\
-\mathbf{v}_t &= \beta_2 \mathbf{v}_{t-1} + (1-\beta_2) (\nabla_{\theta} \mathcal{L}_t)^2 \\
-\hat{\mathbf{m}}_t &= \frac{\mathbf{m}_t}{1-\beta_1^t}, \quad \hat{\mathbf{v}}_t = \frac{\mathbf{v}_t}{1-\beta_2^t} \\
-\theta_{t+1} &= \theta_t - \frac{\alpha}{\sqrt{\hat{\mathbf{v}}_t} + \epsilon} \hat{\mathbf{m}}_t
-\end{aligned}
+\theta_{t+1} = \theta_t - \frac{\alpha}{\sqrt{\hat{\mathbf{v}}_t} + \epsilon} \hat{\mathbf{m}}_t
 \]
+\small{结合了动量和自适应学习率，训练更稳定}
 \end{frame}
 
 \begin{frame}
@@ -283,12 +283,12 @@
 \end{column}
 
 \begin{column}{0.5\textwidth}
-\textbf{训练特点：}
+\textbf{训练观察：}
 \begin{itemize}
-    \item 损失函数快速收敛
-    \item 验证准确率稳步提升
-    \item 无明显过拟合现象
-    \item 学习率调度有效
+    \item 训练损失下降较快
+    \item 验证准确率提升有限
+    \item 存在训练验证差距
+    \item 收敛到局部最优
 \end{itemize}
 
 \vspace{0.3cm}
@@ -315,12 +315,12 @@
 \end{column}
 
 \begin{column}{0.5\textwidth}
-\textbf{性能分析：}
+\textbf{性能分析（存在明显问题）：}
 \begin{itemize}
-    \item 鼠皮树精确率最高(1.00)但召回率较低(0.25)
-    \item 长叶水麻表现相对稳定(F1=0.67)
-    \item 硬头黄召回率较高(0.80)但精确率偏低
-    \item 数据不平衡导致分类效果有待提升
+    \item 整体准确率偏低(44.07\%)，远未达到实用标准
+    \item 各类别表现差异很大，模型学习不充分
+    \item 数据量不足是主要瓶颈(仅295张图像)
+    \item 类别不平衡加剧了分类困难
 \end{itemize}
 
 \vspace{0.3cm}
@@ -431,57 +431,50 @@
 \end{itemize}
 \end{block}
 
-\begin{block}{关键成果}
+\begin{block}{阶段性成果}
 \begin{itemize}
-    \item 实现了\textcolor{darkgreen}{44.07\%}的测试准确率
-    \item 建立了完整的纤维分类流水线
-    \item 识别了数据不平衡等关键问题
-    \item 形成了标准化的开发流程
+    \item 完成了技术方案的初步验证
+    \item 识别了数据不足等关键瓶颈
+    \item 建立了基础的分类流水线
+    \item 为后续改进提供了基准
 \end{itemize}
 \end{block}
+
+\begin{alertblock}{当前挑战}
+\begin{itemize}
+    \item 准确率44.07\%距离实用化还有很大差距
+    \item 数据集规模严重不足
+    \item 类别不平衡问题突出
+\end{itemize}
+\end{alertblock}
 \end{frame}
 
 \begin{frame}
-\frametitle{未来改进方向}
-\begin{columns}
-\begin{column}{0.5\textwidth}
-\textbf{模型优化：}
+\frametitle{下一步改进计划}
+\begin{block}{\textbf{紧急优先级 - 数据问题}}
 \begin{itemize}
-    \item 尝试更先进的网络架构
-    \item 实现模型集成策略
-    \item 引入注意力机制
-    \item 探索自监督学习
+    \item \textbf{扩大数据集}：目标收集至少1000张图像
+    \item \textbf{平衡类别分布}：确保每类至少100张样本
+    \item \textbf{提高数据质量}：标注一致性检查
 \end{itemize}
+\end{block}
 
-\vspace{0.3cm}
-\textbf{数据扩充：}
+\begin{block}{\textbf{中期目标 - 技术优化}}
 \begin{itemize}
-    \item 收集更多样本数据
-    \item 平衡各类别分布
-    \item 引入生成对抗网络
-    \item 跨域数据增强
+    \item 尝试更适合小样本的网络架构
+    \item 改进数据增强策略
+    \item 探索半监督学习方法
+    \item 引入领域自适应技术
 \end{itemize}
-\end{column}
+\end{block}
 
-\begin{column}{0.5\textwidth}
-\textbf{应用部署：}
+\begin{block}{\textbf{长期规划 - 系统完善}}
 \begin{itemize}
-    \item 开发Web应用界面
-    \item 实现移动端应用
-    \item 模型压缩和加速
-    \item 边缘设备部署
+    \item 达到80\%以上的实用准确率
+    \item 开发用户友好的应用界面
+    \item 建立持续学习机制
 \end{itemize}
-
-\vspace{0.3cm}
-\textbf{功能扩展：}
-\begin{itemize}
-    \item 多尺度特征融合
-    \item 细粒度分类识别
-    \item 实时检测定位
-    \item 质量评估功能
-\end{itemize}
-\end{column}
-\end{columns}
+\end{block}
 \end{frame}
 
 
