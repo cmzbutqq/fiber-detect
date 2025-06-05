@@ -1,171 +1,207 @@
-# 纤维图像分类项目
+# 植物纤维图像分类项目
 
-基于ResNet-50的植物纤维显微镜图像分类系统，支持光镜和电镜图像的统一分类。
+基于ResNet-50的植物纤维图像分类系统，用于识别6种不同的植物纤维类型。
 
 ## 项目概述
 
-本项目使用深度学习技术对6种植物纤维进行自动分类：
-- 20CS19764 鼠皮树
-- DH001 粽叶芦
-- JL001 怀槐
-- JL005 蒙古栎
-- LiYLXWZW002 长叶水麻
-- XZYGX023 硬头黄
+本项目使用深度学习技术对植物纤维图像进行分类，支持光镜和电镜两种类型的图像。项目采用预训练的ResNet-50模型进行迁移学习，实现高精度的纤维分类。
 
-## 数据集结构
+### 支持的植物纤维类别
+
+1. **20CS19764 鼠皮树**
+2. **DH001 粽叶芦**
+3. **JL001 怀槐**
+4. **JL005 蒙古栎**
+5. **LiYLXWZW002 长叶水麻**
+6. **XZYGX023 硬头黄**
+
+## 项目结构
 
 ```
-data/
-├── 光镜集(2)/
-│   ├── 20CS19764 鼠皮树/
-│   ├── DH001 粽叶芦/
-│   ├── JL001 怀槐/
-│   ├── JL005 蒙古栎/
-│   ├── LiYLXWZW002 长叶水麻/
-│   └── XZYGX023 硬头黄/
-└── 电镜集/
-    ├── 20CS19764 鼠皮树/
-    ├── DH001 粽叶芦/
-    ├── JL001 怀槐/
-    ├── JL005 蒙古栎/
-    ├── LiYLXWZW002 长叶水麻/
-    └── XZYGX023 硬头黄/
+SRP/
+├── data/                          # 数据集目录
+│   ├── optical/                   # 光镜图像
+│   │   ├── 20CS19764 鼠皮树/
+│   │   ├── DH001 粽叶芦/
+│   │   ├── JL001 怀槐/
+│   │   ├── JL005 蒙古栎/
+│   │   ├── LiYLXWZW002 长叶水麻/
+│   │   └── XZYGX023 硬头黄/
+│   └── electron/                  # 电镜图像
+│       ├── 20CS19764 鼠皮树/
+│       ├── DH001 粽叶芦/
+│       ├── JL001 怀槐/
+│       ├── JL005 蒙古栎/
+│       ├── LiYLXWZW002 长叶水麻/
+│       └── XZYGX023 硬头黄/
+├── models/                        # 保存的模型文件
+├── results/                       # 训练结果和可视化
+├── train.py                       # 训练脚本
+├── predict.py                     # 预测脚本
+├── analyze_dataset.py             # 数据集分析脚本
+├── requirements.txt               # 依赖包列表
+└── README.md                      # 项目说明
 ```
 
-## 环境配置
+## 环境要求
 
-### 1. 安装依赖
+- Python 3.7+
+- PyTorch 1.9+
+- CUDA (可选，用于GPU加速)
+
+## 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 系统要求
-
-- Python 3.7+
-- CUDA支持的GPU（推荐，可选）
-- 至少8GB内存
-
 ## 使用方法
 
-### 训练模型
+### 1. 数据集分析
+
+首先运行数据集分析脚本，了解数据集的基本信息：
 
 ```bash
-python fiber_classifier.py
+python analyze_dataset.py
 ```
 
-训练过程将：
-1. 自动加载光镜集和电镜集数据
-2. 划分训练集和验证集（8:2比例）
-3. 使用预训练ResNet-50进行迁移学习
-4. 保存最佳模型到 `best_fiber_classifier.pth`
-5. 生成训练曲线和混淆矩阵图表
-6. 保存详细结果到 `training_results.json`
+这将生成：
+- 数据集统计信息（控制台输出）
+- 可视化图表（dataset_analysis.png）
+- 分析报告（dataset_analysis_report.json）
 
-### 模型特性
+### 2. 模型训练
 
-- **骨干网络**: 预训练ResNet-50
-- **分类头**: 全连接层 (2048 → 512 → 6)
-- **数据增强**: 随机翻转、旋转、颜色抖动
-- **优化器**: Adam (lr=0.001, weight_decay=1e-4)
-- **学习率调度**: StepLR (step_size=10, gamma=0.1)
-- **批次大小**: 16
-- **训练轮数**: 30
+运行训练脚本开始训练模型：
 
-### 输出文件
-
-训练完成后将生成以下文件：
-
-- `best_fiber_classifier.pth`: 最佳模型权重
-- `training_history.png`: 训练损失和准确率曲线
-- `confusion_matrix.png`: 混淆矩阵热力图
-- `training_results.json`: 详细训练结果和分类报告
-
-## 模型架构
-
-```python
-FiberClassifier(
-  (backbone): ResNet(
-    # ResNet-50 layers
-    (fc): Sequential(
-      (0): Dropout(p=0.5)
-      (1): Linear(in_features=2048, out_features=512)
-      (2): ReLU()
-      (3): Dropout(p=0.3)
-      (4): Linear(in_features=512, out_features=6)
-    )
-  )
-)
+```bash
+python train.py
 ```
 
-## 数据预处理
+训练参数可以在脚本中修改：
+- `batch_size`: 批次大小（默认32）
+- `num_epochs`: 训练轮数（默认50）
+- `learning_rate`: 学习率（默认0.001）
+- `weight_decay`: 权重衰减（默认1e-4）
 
-### 训练时增强
-- 尺寸调整: 256×256 → 随机裁剪224×224
-- 随机水平/垂直翻转
-- 随机旋转 (±15度)
-- 颜色抖动
-- ImageNet标准化
+训练过程中会：
+- 自动划分训练/验证/测试集（70%/15%/15%）
+- 处理数据不平衡问题（加权采样）
+- 保存最佳模型到`models/`目录
+- 生成训练历史曲线和混淆矩阵
 
-### 验证时处理
-- 尺寸调整: 224×224
-- ImageNet标准化
+### 3. 模型预测
 
-## 性能监控
+使用训练好的模型对单张图像进行预测：
 
-训练过程中会显示：
-- 实时损失和准确率
-- 每个epoch的训练/验证指标
-- 最佳模型保存提示
+```bash
+python predict.py --image_path path/to/your/image.jpg
+```
+
+或者在脚本中修改图像路径直接运行：
+
+```bash
+python predict.py
+```
+
+## 模型特点
+
+### 网络架构
+- **基础模型**: ResNet-50（ImageNet预训练）
+- **迁移学习**: 冻结前层，微调后层
+- **分类头**: 自定义全连接层
+- **输出**: 6类植物纤维分类
+
+### 数据处理
+- **图像预处理**: 调整大小、标准化
+- **数据增强**: 随机翻转、旋转、颜色变换
+- **不平衡处理**: 加权随机采样
+- **多模态融合**: 光镜和电镜图像统一处理
+
+### 训练策略
+- **优化器**: Adam
+- **损失函数**: 交叉熵损失
+- **学习率调度**: StepLR（每10轮衰减0.1）
+- **早停机制**: 验证损失不改善时停止
+- **模型保存**: 保存验证准确率最高的模型
+
+## 结果输出
+
+训练完成后会生成以下文件：
+
+1. **模型文件**:
+   - `models/best_model.pth`: 最佳模型权重
+   - `models/final_model.pth`: 最终模型权重
+
+2. **可视化结果**:
+   - `results/training_history.png`: 训练历史曲线
+   - `results/confusion_matrix.png`: 混淆矩阵
+   - `dataset_analysis.png`: 数据集分析图表
+
+3. **分析报告**:
+   - `dataset_analysis_report.json`: 数据集详细分析
+
+## 性能指标
+
+模型评估包括以下指标：
+- **准确率 (Accuracy)**
+- **精确率 (Precision)**
+- **召回率 (Recall)**
+- **F1分数 (F1-Score)**
+- **混淆矩阵 (Confusion Matrix)**
+
+## 注意事项
+
+1. **数据格式**: 支持 .tiff, .tif, .png, .jpg, .jpeg 格式
+2. **内存要求**: 建议至少8GB RAM
+3. **GPU加速**: 推荐使用GPU进行训练以提高速度
+4. **数据路径**: 确保数据集放在正确的目录结构中
 
 ## 故障排除
 
 ### 常见问题
 
-1. **CUDA内存不足**
-   - 减小batch_size (默认16)
-   - 减少num_workers
+1. **CUDA内存不足**:
+   - 减小batch_size
+   - 使用CPU训练（设置device='cpu'）
 
-2. **数据加载错误**
-   - 检查data目录结构
-   - 确认图像文件格式支持
+2. **数据加载错误**:
+   - 检查数据集路径和文件格式
+   - 确保图像文件完整且可读
 
-3. **训练速度慢**
-   - 确保使用GPU训练
-   - 检查数据加载器的num_workers设置
-
-### 调试模式
-
-如需调试，可以修改以下参数：
-- 减少num_epochs进行快速测试
-- 增加batch_size提高训练效率
-- 调整学习率和权重衰减
+3. **训练速度慢**:
+   - 使用GPU加速
+   - 减少数据增强操作
+   - 调整num_workers参数
 
 ## 扩展功能
 
-### 自定义配置
+### 可能的改进方向
 
-可以修改 `fiber_classifier.py` 中的参数：
-- 网络架构
-- 训练超参数
-- 数据增强策略
-- 损失函数
+1. **模型优化**:
+   - 尝试其他预训练模型（EfficientNet, Vision Transformer等）
+   - 实现模型集成
+   - 添加注意力机制
 
-### 模型推理
+2. **数据增强**:
+   - 更复杂的数据增强策略
+   - 生成对抗网络(GAN)数据增强
+   - 混合增强技术
 
-训练完成后，可以使用保存的模型进行单张图像预测：
+3. **多模态融合**:
+   - 分别处理光镜和电镜图像
+   - 特征级融合
+   - 决策级融合
 
-```python
-# 加载模型
-checkpoint = torch.load('best_fiber_classifier.pth')
-model = FiberClassifier(num_classes=6)
-model.load_state_dict(checkpoint['model_state_dict'])
-model.eval()
-
-# 预测单张图像
-# (需要实现预测函数)
-```
+4. **部署优化**:
+   - 模型量化和压缩
+   - ONNX格式转换
+   - Web服务部署
 
 ## 许可证
 
 本项目仅用于学术研究目的。
+
+## 联系方式
+
+如有问题或建议，请联系项目维护者。

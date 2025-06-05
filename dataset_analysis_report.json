@@ -1,0 +1,99 @@
+{
+  "summary": {
+    "total_images": 295,
+    "optical_images": 147,
+    "electron_images": 148,
+    "num_classes": 6,
+    "class_names": [
+      "20CS19764 鼠皮树",
+      "DH001 粽叶芦",
+      "JL001 怀槐",
+      "JL005 蒙古栎",
+      "LiYLXWZW002 长叶水麻",
+      "XZYGX023 硬头黄"
+    ]
+  },
+  "class_distribution": {
+    "20CS19764 鼠皮树": {
+      "optical": 24,
+      "electron": 18,
+      "total": 42
+    },
+    "DH001 粽叶芦": {
+      "optical": 34,
+      "electron": 31,
+      "total": 65
+    },
+    "JL001 怀槐": {
+      "optical": 19,
+      "electron": 35,
+      "total": 54
+    },
+    "JL005 蒙古栎": {
+      "optical": 6,
+      "electron": 27,
+      "total": 33
+    },
+    "LiYLXWZW002 长叶水麻": {
+      "optical": 34,
+      "electron": 15,
+      "total": 49
+    },
+    "XZYGX023 硬头黄": {
+      "optical": 30,
+      "electron": 22,
+      "total": 52
+    }
+  },
+  "file_formats": {
+    ".tiff": 117,
+    ".png": 30,
+    ".tif": 148
+  },
+  "file_size_stats": {
+    "mean_mb": 3.781733348005909,
+    "median_mb": 1.1735401153564453,
+    "min_mb": 1.1735172271728516,
+    "max_mb": 60.75515937805176,
+    "std_mb": 7.558579246376067
+  },
+  "image_size_stats": {
+    "width_stats": {
+      "mean": 1710.546218487395,
+      "min": 1280,
+      "max": 5939
+    },
+    "height_stats": {
+      "mean": 1282.3529411764705,
+      "min": 960,
+      "max": 4437
+    },
+    "common_sizes": [
+      [
+        "1600x1200",
+        102
+      ],
+      [
+        "1280x960",
+        13
+      ],
+      [
+        "5917x4433",
+        1
+      ],
+      [
+        "5936x4418",
+        1
+      ],
+      [
+        "5923x4437",
+        1
+      ],
+      [
+        "5939x4432",
+        1
+      ]
+    ]
+  },
+  "errors": []
+}
