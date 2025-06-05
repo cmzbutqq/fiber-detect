@@ -173,6 +173,60 @@
 \end{frame}
 
 \begin{frame}
+\frametitle{ResNet-50理论基础}
+\textbf{残差学习原理：}
+\begin{itemize}
+    \item 解决深度网络梯度消失问题
+    \item 引入跳跃连接（Skip Connection）
+    \item 学习残差映射而非直接映射
+\end{itemize}
+
+\vspace{0.3cm}
+\textbf{残差块数学表达：}
+\[
+\mathbf{y} = \mathcal{F}(\mathbf{x}, \{W_i\}) + \mathbf{x}
+\]
+其中 \(\mathcal{F}(\mathbf{x}, \{W_i\})\) 表示残差映射，\(\mathbf{x}\) 为输入。
+
+\vspace{0.3cm}
+\textbf{Bottleneck设计：}
+\[
+\begin{aligned}
+\mathbf{z}_1 &= \text{ReLU}(\text{BN}(\text{Conv}_{1×1}(\mathbf{x}))) \\
+\mathbf{z}_2 &= \text{ReLU}(\text{BN}(\text{Conv}_{3×3}(\mathbf{z}_1))) \\
+\mathbf{z}_3 &= \text{BN}(\text{Conv}_{1×1}(\mathbf{z}_2)) \\
+\mathbf{y} &= \text{ReLU}(\mathbf{z}_3 + \mathbf{x})
+\end{aligned}
+\]
+\end{frame}
+
+\begin{frame}
+\frametitle{损失函数与优化}
+\textbf{交叉熵损失函数：}
+\[
+\mathcal{L} = -\frac{1}{N}\sum_{i=1}^{N}\sum_{j=1}^{C} y_{ij} \log(\hat{y}_{ij})
+\]
+其中 \(N\) 为批次大小，\(C\) 为类别数，\(y_{ij}\) 为真实标签，\(\hat{y}_{ij}\) 为预测概率。
+
+\vspace{0.3cm}
+\textbf{Softmax激活函数：}
+\[
+\hat{y}_{ij} = \frac{\exp(z_{ij})}{\sum_{k=1}^{C} \exp(z_{ik})}
+\]
+
+\vspace{0.3cm}
+\textbf{Adam优化器更新规则：}
+\[
+\begin{aligned}
+\mathbf{m}_t &= \beta_1 \mathbf{m}_{t-1} + (1-\beta_1) \nabla_{\theta} \mathcal{L}_t \\
+\mathbf{v}_t &= \beta_2 \mathbf{v}_{t-1} + (1-\beta_2) (\nabla_{\theta} \mathcal{L}_t)^2 \\
+\hat{\mathbf{m}}_t &= \frac{\mathbf{m}_t}{1-\beta_1^t}, \quad \hat{\mathbf{v}}_t = \frac{\mathbf{v}_t}{1-\beta_2^t} \\
+\theta_{t+1} &= \theta_t - \frac{\alpha}{\sqrt{\hat{\mathbf{v}}_t} + \epsilon} \hat{\mathbf{m}}_t
+\end{aligned}
+\]
+\end{frame}
+
+\begin{frame}
 \frametitle{数据处理策略}
 \begin{columns}
 \begin{column}{0.5\textwidth}
@@ -240,9 +294,9 @@
 \vspace{0.3cm}
 \begin{block}{关键指标}
 \begin{itemize}
-    \item 最佳验证准确率：\textcolor{darkgreen}{85.2\%}
-    \item 测试集准确率：\textcolor{darkgreen}{83.7\%}
-    \item 训练时间：约30分钟
+    \item 最佳验证准确率：\textcolor{darkgreen}{47.46\%}
+    \item 测试集准确率：\textcolor{darkgreen}{44.07\%}
+    \item 训练时间：约33分钟
 \end{itemize}
 \end{block}
 \end{column}
@@ -263,20 +317,20 @@
 \begin{column}{0.5\textwidth}
 \textbf{性能分析：}
 \begin{itemize}
-    \item 大部分类别识别准确
-    \item 粽叶芦识别效果最佳
-    \item 蒙古栎样本较少，识别难度大
-    \item 整体分类效果良好
+    \item 鼠皮树精确率最高(1.00)但召回率较低(0.25)
+    \item 长叶水麻表现相对稳定(F1=0.67)
+    \item 硬头黄召回率较高(0.80)但精确率偏低
+    \item 数据不平衡导致分类效果有待提升
 \end{itemize}
 
 \vspace{0.3cm}
 \begin{block}{评估指标}
 \small
 \begin{itemize}
-    \item 平均精确率：82.1\%
-    \item 平均召回率：83.7\%
-    \item 平均F1分数：82.8\%
-    \item 宏平均准确率：83.7\%
+    \item 宏平均精确率：57\%
+    \item 宏平均召回率：42\%
+    \item 宏平均F1分数：41\%
+    \item 加权平均准确率：44.07\%
 \end{itemize}
 \end{block}
 \end{column}
@@ -379,9 +433,9 @@
 
 \begin{block}{关键成果}
 \begin{itemize}
-    \item 实现了\textcolor{darkgreen}{83.7\%}的测试准确率
+    \item 实现了\textcolor{darkgreen}{44.07\%}的测试准确率
     \item 建立了完整的纤维分类流水线
-    \item 提供了可扩展的深度学习框架
+    \item 识别了数据不平衡等关键问题
     \item 形成了标准化的开发流程
 \end{itemize}
 \end{block}
@@ -430,30 +484,6 @@
 \end{columns}
 \end{frame}
 
-\begin{frame}
-\frametitle{致谢}
-\begin{center}
-\Large
-\textbf{感谢各位的关注！}
 
-\vspace{1cm}
-
-\textcolor{darkblue}{项目代码已开源，欢迎交流合作}
-
-\vspace{0.5cm}
-
-\textit{"深度学习让纤维识别更智能"}
-\end{center}
-
-\vspace{1cm}
-
-\begin{block}{联系方式}
-\begin{itemize}
-    \item 项目地址：\texttt{d:\textbackslash WorkSpace\textbackslash SRP}
-    \item 技术栈：PyTorch + ResNet-50 + 迁移学习
-    \item 开发环境：Python 3.7+ / CUDA支持
-\end{itemize}
-\end{block}
-\end{frame}
 
 \end{document}

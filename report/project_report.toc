@@ -1,5 +1,5 @@
 \beamer@sectionintoc {1}{项目概述}{3}{0}{1}
 \beamer@sectionintoc {2}{技术方案}{5}{0}{2}
-\beamer@sectionintoc {3}{实验结果}{8}{0}{3}
-\beamer@sectionintoc {4}{项目成果}{11}{0}{4}
-\beamer@sectionintoc {5}{总结与展望}{13}{0}{5}
+\beamer@sectionintoc {3}{实验结果}{10}{0}{3}
+\beamer@sectionintoc {4}{项目成果}{13}{0}{4}
+\beamer@sectionintoc {5}{总结与展望}{15}{0}{5}
