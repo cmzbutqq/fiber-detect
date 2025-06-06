@@ -59,8 +59,13 @@ class FiberDataset(Dataset):
             
         return image, label
 
-def load_dataset(data_dir):
-    """加载数据集"""
+def load_dataset(data_dir, microscope_type='both'):
+    """加载数据集
+    
+    Args:
+        data_dir: 数据目录路径
+        microscope_type: 显微镜类型 ('optical', 'electron', 'both')
+    """
     # 定义类别映射
     class_names = [
         '20CS19764 鼠皮树',
@@ -77,13 +82,24 @@ def load_dataset(data_dir):
     # 支持的图像格式
     supported_formats = ('.tiff', '.tif', '.png', '.jpg', '.jpeg')
     
-    # 遍历optical和electron文件夹
-    for folder in ['optical', 'electron']:
+    # 根据microscope_type确定要处理的文件夹
+    if microscope_type == 'both':
+        folders = ['optical', 'electron']
+    elif microscope_type in ['optical', 'electron']:
+        folders = [microscope_type]
+    else:
+        raise ValueError("microscope_type must be 'optical', 'electron', or 'both'")
+    
+    print(f"加载 {microscope_type} 显微镜数据...")
+    
+    # 遍历指定的文件夹
+    for folder in folders:
         folder_path = os.path.join(data_dir, folder)
         if not os.path.exists(folder_path):
             print(f"Warning: {folder_path} does not exist")
             continue
             
+        print(f"处理文件夹: {folder}")
         for class_idx, class_name in enumerate(class_names):
             class_dir = os.path.join(folder_path, class_name)
             if not os.path.exists(class_dir):
@@ -230,14 +246,14 @@ def validate_epoch(model, val_loader, criterion, device):
     
     return epoch_loss, epoch_acc, all_predictions, all_labels
 
-def plot_training_history(train_losses, train_accs, val_losses, val_accs):
+def plot_training_history(train_losses, train_accs, val_losses, val_accs, microscope_type=''):
     """绘制训练历史"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 5))
     
     # 损失曲线
     ax1.plot(train_losses, label='Train Loss', color='blue')
     ax1.plot(val_losses, label='Val Loss', color='red')
-    ax1.set_title('Training and Validation Loss')
+    ax1.set_title(f'Training and Validation Loss - {microscope_type.capitalize()}' if microscope_type else 'Training and Validation Loss')
     ax1.set_xlabel('Epoch')
     ax1.set_ylabel('Loss')
     ax1.legend()
@@ -246,66 +262,61 @@ def plot_training_history(train_losses, train_accs, val_losses, val_accs):
     # 准确率曲线
     ax2.plot(train_accs, label='Train Acc', color='blue')
     ax2.plot(val_accs, label='Val Acc', color='red')
-    ax2.set_title('Training and Validation Accuracy')
+    ax2.set_title(f'Training and Validation Accuracy - {microscope_type.capitalize()}' if microscope_type else 'Training and Validation Accuracy')
     ax2.set_xlabel('Epoch')
     ax2.set_ylabel('Accuracy (%)')
     ax2.legend()
     ax2.grid(True)
     
     plt.tight_layout()
-    plt.savefig('training_history.png', dpi=300, bbox_inches='tight')
+    filename = f'training_history_{microscope_type}.png' if microscope_type else 'training_history.png'
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
     plt.show()
 
-def plot_confusion_matrix(y_true, y_pred, class_names):
+def plot_confusion_matrix(y_true, y_pred, class_names, microscope_type=''):
     """绘制混淆矩阵"""
     cm = confusion_matrix(y_true, y_pred)
     
     plt.figure(figsize=(10, 8))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
                 xticklabels=class_names, yticklabels=class_names)
-    plt.title('Confusion Matrix')
+    title = f'Confusion Matrix - {microscope_type.capitalize()}' if microscope_type else 'Confusion Matrix'
+    plt.title(title)
     plt.xlabel('Predicted Label')
     plt.ylabel('True Label')
     plt.xticks(rotation=45, ha='right')
     plt.yticks(rotation=0)
     plt.tight_layout()
-    plt.savefig('confusion_matrix.png', dpi=300, bbox_inches='tight')
+    filename = f'confusion_matrix_{microscope_type}.png' if microscope_type else 'confusion_matrix.png'
+    plt.savefig(filename, dpi=300, bbox_inches='tight')
     plt.show()
 
-def main():
-    """主训练函数"""
-    # 配置参数
-    config = {
-        'data_dir': './data',
-        'batch_size': 32,
-        'num_epochs': 50,
-        'learning_rate': 0.001,
-        'weight_decay': 1e-4,
-        'test_size': 0.2,
-        'val_size': 0.2,
-        'num_workers': 4,
-        'save_model': True,
-        'model_name': 'fiber_classifier_resnet50.pth'
-    }
+def train_single_model(config, microscope_type):
+    """训练单个模型
     
-    # 保存配置
-    with open('config.json', 'w', encoding='utf-8') as f:
-        json.dump(config, f, indent=2, ensure_ascii=False)
+    Args:
+        config: 配置参数
+        microscope_type: 显微镜类型 ('optical' 或 'electron')
+    """
+    print(f"\n{'='*60}")
+    print(f"开始训练 {microscope_type.upper()} 显微镜模型")
+    print(f"{'='*60}")
     
-    print("=" * 60)
-    print("纤维图像分类训练开始")
-    print("=" * 60)
+    # 检查设备 - 强制使用CUDA
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA不可用！请确保已安装支持CUDA的PyTorch版本并且系统有可用的GPU。")
     
-    # 检查设备
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda')
     print(f"使用设备: {device}")
+    print(f"GPU设备名称: {torch.cuda.get_device_name(0)}")
+    print(f"GPU内存: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
     
-    # 加载数据集
-    print("\n加载数据集...")
-    image_paths, labels, class_names = load_dataset(config['data_dir'])
+    # 加载指定类型的数据集
+    print(f"\n加载 {microscope_type} 数据集...")
+    image_paths, labels, class_names = load_dataset(config['data_dir'], microscope_type)
     
     if len(image_paths) == 0:
-        print("错误：没有找到任何图像文件！")
+        print(f"错误：没有找到任何 {microscope_type} 图像文件！")
         return
     
     # 划分数据集
@@ -333,11 +344,12 @@ def main():
     # 获取数据变换
     train_transform, val_transform = get_transforms()
     
-    # 创建数据集和数据加载器
-    train_dataset = FiberDataset(train_paths, train_labels, train_transform)
-    val_dataset = FiberDataset(val_paths, val_labels, val_transform)
-    test_dataset = FiberDataset(test_paths, test_labels, val_transform)
+    # 创建数据集
+    train_dataset = FiberDataset(train_paths, train_labels, transform=train_transform)
+    val_dataset = FiberDataset(val_paths, val_labels, transform=val_transform)
+    test_dataset = FiberDataset(test_paths, test_labels, transform=val_transform)
     
+    # 创建数据加载器
     train_loader = DataLoader(
         train_dataset, 
         batch_size=config['batch_size'], 
@@ -434,24 +446,102 @@ def main():
     
     # 保存模型
     if config['save_model']:
+        model_filename = f"fiber_classifier_resnet50_{microscope_type}.pth"
         torch.save({
             'model_state_dict': best_model_state,
             'class_names': class_names,
             'config': config,
+            'microscope_type': microscope_type,
             'best_val_acc': best_val_acc,
             'test_acc': test_acc
-        }, config['model_name'])
-        print(f"\n模型已保存为: {config['model_name']}")
+        }, model_filename)
+        print(f"\n模型已保存为: {model_filename}")
     
     # 绘制训练历史
     print("\n绘制训练历史...")
-    plot_training_history(train_losses, train_accs, val_losses, val_accs)
+    plot_training_history(train_losses, train_accs, val_losses, val_accs, microscope_type)
     
     # 绘制混淆矩阵
     print("绘制混淆矩阵...")
-    plot_confusion_matrix(test_true, test_predictions, class_names)
+    plot_confusion_matrix(test_true, test_predictions, class_names, microscope_type)
     
-    print("\n训练完成！")
+    print(f"\n{microscope_type.upper()} 模型训练完成！")
+    return test_acc
+
+def main():
+    """主训练函数"""
+    # 首先检查CUDA可用性
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA不可用！请确保已安装支持CUDA的PyTorch版本并且系统有可用的GPU。")
+    
+    print("=" * 60)
+    print("纤维图像分类训练开始 - 分别训练光镜和电镜模型")
+    print("=" * 60)
+    print(f"检测到CUDA设备: {torch.cuda.get_device_name(0)}")
+    print(f"GPU内存: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.1f} GB")
+    print("=" * 60)
+    
+    # 配置参数
+    config = {
+        'data_dir': './data',
+        'batch_size': 32,
+        'num_epochs': 50,
+        'learning_rate': 0.001,
+        'weight_decay': 1e-4,
+        'test_size': 0.2,
+        'val_size': 0.2,
+        'num_workers': 4,
+        'save_model': True,
+        'model_name': 'fiber_classifier_resnet50.pth'
+    }
+    
+    # 保存配置
+    with open('config.json', 'w', encoding='utf-8') as f:
+        json.dump(config, f, indent=2, ensure_ascii=False)
+    
+    # 训练结果记录
+    results = {}
+    
+    # 训练光镜模型
+    print("\n开始训练光镜(Optical)模型...")
+    optical_acc = train_single_model(config, 'optical')
+    results['optical'] = optical_acc
+    
+    # 训练电镜模型
+    print("\n开始训练电镜(Electron)模型...")
+    electron_acc = train_single_model(config, 'electron')
+    results['electron'] = electron_acc
+    
+    # 输出最终结果
+    print("\n" + "=" * 60)
+    print("所有模型训练完成！")
+    print("=" * 60)
+    print(f"光镜模型测试准确率: {results['optical']:.2f}%")
+    print(f"电镜模型测试准确率: {results['electron']:.2f}%")
+    print("\n模型文件:")
+    print("- fiber_classifier_resnet50_optical.pth")
+    print("- fiber_classifier_resnet50_electron.pth")
+    print("\n图表文件:")
+    print("- training_history_optical.png")
+    print("- training_history_electron.png")
+    print("- confusion_matrix_optical.png")
+    print("- confusion_matrix_electron.png")
+    
+    # 保存训练结果摘要
+    summary = {
+        'training_date': time.strftime('%Y-%m-%d %H:%M:%S'),
+        'config': config,
+        'results': results,
+        'model_files': {
+            'optical': 'fiber_classifier_resnet50_optical.pth',
+            'electron': 'fiber_classifier_resnet50_electron.pth'
+        }
+    }
+    
+    with open('training_summary.json', 'w', encoding='utf-8') as f:
+        json.dump(summary, f, indent=2, ensure_ascii=False)
+    
+    print("\n训练摘要已保存为: training_summary.json")
 
 if __name__ == '__main__':
     main()
